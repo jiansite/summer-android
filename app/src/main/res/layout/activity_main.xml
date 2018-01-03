@@ -9,7 +9,7 @@
         android:id="@+id/boxTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
+        android:background="@color/title_view"
         android:gravity="center_vertical"
         android:orientation="vertical">
 

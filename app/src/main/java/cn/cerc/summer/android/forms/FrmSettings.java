@@ -2,10 +2,14 @@ package cn.cerc.summer.android.forms;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -19,6 +23,7 @@ import com.mimrc.vine.R;
 import cn.cerc.summer.android.core.Constans;
 import cn.cerc.summer.android.core.MyApp;
 import cn.cerc.summer.android.core.ScreenUtils;
+import cn.cerc.summer.android.core.VisualKeyboardTool;
 import cn.cerc.summer.android.forms.view.CustomSeekBar;
 
 public class FrmSettings extends AppCompatActivity implements SeekBar.OnSeekBarChangeListener, View.OnClickListener {
@@ -32,6 +37,7 @@ public class FrmSettings extends AppCompatActivity implements SeekBar.OnSeekBarC
     private int scales = 0;
     private int def_scales = 0;
     private LinearLayout lin_cun;
+    private View hightview;
 
     private Button[] buttons = new Button[5];
 
@@ -44,10 +50,16 @@ public class FrmSettings extends AppCompatActivity implements SeekBar.OnSeekBarC
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initWindows();//沉浸式全屏设置
         setContentView(R.layout.activity_setting);
         settings = getSharedPreferences(Constans.SHARED_SETTING_TAB, MODE_PRIVATE);
-
-
+        hightview = (View) findViewById(R.id.hightview);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            hightview.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, VisualKeyboardTool.getStatusBarHeight(FrmSettings.this)));
+            hightview.setVisibility(View.VISIBLE);
+        } else {
+            hightview.setVisibility(View.GONE);
+        }
         def_scales = ScreenUtils.getScales(this, ScreenUtils.getInches(this));
         back = (ImageView) this.findViewById(R.id.back);
         button = (Button) this.findViewById(R.id.save);
@@ -116,6 +128,44 @@ public class FrmSettings extends AppCompatActivity implements SeekBar.OnSeekBarC
         for (Button button : buttons)
             button.setOnClickListener(this);
 
+    }
+
+    private void initWindows() {
+        Window window = getWindow();
+        int color = getResources().getColor(android.R.color.transparent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS
+                    | WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            //设置状态栏颜色
+            window.setStatusBarColor(color);
+            //设置导航栏颜色
+//            window.setNavigationBarColor(color);
+            ViewGroup contentView = ((ViewGroup) findViewById(android.R.id.content));
+            View childAt = contentView.getChildAt(0);
+            if (childAt != null) {
+                childAt.setFitsSystemWindows(true);
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            //透明状态栏
+            window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            //透明导航栏
+            window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+            //设置contentview为fitsSystemWindows
+            ViewGroup contentView = (ViewGroup) findViewById(android.R.id.content);
+            View childAt = contentView.getChildAt(0);
+            if (childAt != null) {
+                childAt.setFitsSystemWindows(true);
+            }
+            //给statusbar着色
+            View view = new View(this);
+            view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, VisualKeyboardTool.getStatusBarHeight(this)));
+            view.setBackgroundColor(color);
+            contentView.addView(view);
+        }
     }
 
     @Override
